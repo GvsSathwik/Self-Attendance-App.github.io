@@ -66,6 +66,25 @@ function renderCalendar() {
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   calendar.innerHTML = "";
 
+  // Weekday headers
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  weekdays.forEach(w => {
+    const hd = document.createElement("div");
+    hd.className = "weekday";
+    hd.textContent = w;
+    calendar.appendChild(hd);
+  });
+
+  // Compute which weekday the 1st of month falls on
+  const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
+
+  // Add leading empty slots so dates fall under correct weekday
+  for (let i = 0; i < firstDay; i++) {
+    const blank = document.createElement("div");
+    blank.className = "empty";
+    calendar.appendChild(blank);
+  }
+
   const taskData = attendanceData[currentTask] || {};
   let present = 0, absent = 0;
 
@@ -77,11 +96,13 @@ function renderCalendar() {
 
     const isPresent = taskData[dateKey];
     const div = document.createElement("div");
+    div.className = "dateCell";
     div.textContent = day;
     if (!isPresent) div.classList.add("absent");
 
     div.onclick = () => {
       taskData[dateKey] = !taskData[dateKey];
+      attendanceData[currentTask] = taskData;
       saveData();
       renderCalendar();
     };
