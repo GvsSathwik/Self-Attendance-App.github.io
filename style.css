@@ -1,108 +1,151 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f8fafc;
-  margin: 0;
-  padding: 20px;
+const taskInput = document.getElementById("taskInput");
+const taskList = document.getElementById("taskList");
+const calendarSection = document.getElementById("calendarSection");
+const monthSelect = document.getElementById("monthSelect");
+const yearSelect = document.getElementById("yearSelect");
+const calendar = document.getElementById("calendar");
+const selectedTaskTitle = document.getElementById("selectedTaskTitle");
+const summary = document.getElementById("summary");
+
+let currentTask = null;
+let allTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let attendanceData = JSON.parse(localStorage.getItem("attendance")) || {};
+
+function saveData() {
+  localStorage.setItem("tasks", JSON.stringify(allTasks));
+  localStorage.setItem("attendance", JSON.stringify(attendanceData));
 }
 
-.container {
-  max-width: 600px;
-  margin: auto;
-  background-color: white;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+function addTask() {
+  const task = taskInput.value.trim();
+  if (!task || allTasks.includes(task)) return;
+  allTasks.push(task);
+  attendanceData[task] = {};
+  taskInput.value = "";
+  saveData();
+  renderTasks();
 }
 
-h1 {
-  text-align: center;
-  color: #1d4ed8;
+function deleteTask(task) {
+  const confirmDelete = confirm(`Are you sure you want to delete the task "${task}"?`);
+  if (!confirmDelete) return;
+
+  allTasks = allTasks.filter(t => t !== task);
+  delete attendanceData[task];
+  if (currentTask === task) calendarSection.classList.add("hidden");
+  saveData();
+  renderTasks();
 }
 
-.input-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+function renderTasks() {
+  taskList.innerHTML = "";
+  allTasks.forEach(task => {
+    const div = document.createElement("div");
+    div.className = "task";
+    div.innerHTML = `
+      <span>${task}</span>
+      <div>
+        <button onclick="selectTask('${task}')">📅</button>
+        <button onclick="deleteTask('${task}')">🗑</button>
+      </div>
+    `;
+    taskList.appendChild(div);
+  });
 }
 
-input[type="text"] {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+function selectTask(task) {
+  currentTask = task;
+  selectedTaskTitle.textContent = `📌 ${task}`;
+  calendarSection.classList.remove("hidden");
+  renderCalendar();
 }
 
-button {
-  background-color: #10b981;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  cursor: pointer;
+function renderCalendar() {
+  const selectedMonth = parseInt(monthSelect.value);
+  const selectedYear = parseInt(yearSelect.value);
+  const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+  calendar.innerHTML = "";
+
+  // Weekday headers
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  weekdays.forEach(w => {
+    const hd = document.createElement("div");
+    hd.className = "weekday";
+    hd.textContent = w;
+    calendar.appendChild(hd);
+  });
+
+  // Compute which weekday the 1st of month falls on
+  const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
+
+  // Add leading empty slots so dates fall under correct weekday
+  for (let i = 0; i < firstDay; i++) {
+    const blank = document.createElement("div");
+    blank.className = "empty";
+    calendar.appendChild(blank);
+  }
+
+  const taskData = attendanceData[currentTask] || {};
+  let present = 0, absent = 0;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateKey = `${selectedYear}-${selectedMonth}-${day}`;
+    if (!(dateKey in taskData)) {
+      taskData[dateKey] = true; // default to present
+    }
+
+    const isPresent = taskData[dateKey];
+    const div = document.createElement("div");
+    div.className = "dateCell";
+    div.textContent = day;
+    if (!isPresent) div.classList.add("absent");
+
+    div.onclick = () => {
+      taskData[dateKey] = !taskData[dateKey];
+      attendanceData[currentTask] = taskData;
+      saveData();
+      renderCalendar();
+    };
+
+    calendar.appendChild(div);
+    isPresent ? present++ : absent++;
+  }
+
+  summary.textContent = `✅ Present: ${present} | ❌ Absent: ${absent}`;
+  attendanceData[currentTask] = taskData;
+  saveData();
 }
 
-button:hover {
-  background-color: #059669;
+function populateMonthSelect() {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  months.forEach((m, i) => {
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = m;
+    monthSelect.appendChild(option);
+  });
+  monthSelect.value = new Date().getMonth();
 }
 
-.task {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #e0f2fe;
-  padding: 12px 16px;
-  border-left: 5px solid #2563eb;
-  border-radius: 10px;
-  margin-bottom: 12px;
-  font-weight: 600;
-  color: #1e3a8a;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+function populateYearSelect() {
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+    const option = document.createElement("option");
+    option.value = y;
+    option.textContent = y;
+    if (y === currentYear) option.selected = true;
+    yearSelect.appendChild(option);
+  }
 }
 
-.task button {
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  margin-left: 5px;
-  cursor: pointer;
-}
+monthSelect.onchange = renderCalendar;
+yearSelect.onchange = renderCalendar;
 
-.task button:hover {
-  background-color: #1d4ed8;
-}
-
-.hidden {
-  display: none;
-}
-
-#calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-top: 20px;
-}
-
-#calendar div {
-  background-color: #a7f3d0;
-  padding: 14px 0;
-  text-align: center;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-#calendar div.absent {
-  background-color: #fecaca;
-}
-
-#calendar div:hover {
-  opacity: 0.9;
-}
-
-#summary {
-  margin-top: 15px;
-  font-weight: bold;
-  text-align: center;
-}
+document.addEventListener("DOMContentLoaded", () => {
+  populateMonthSelect();
+  populateYearSelect();
+  renderTasks();
+});
