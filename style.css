@@ -1,0 +1,108 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f8fafc;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #1d4ed8;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #059669;
+}
+
+.task {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #e0f2fe;
+  padding: 12px 16px;
+  border-left: 5px solid #2563eb;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #1e3a8a;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.task button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.task button:hover {
+  background-color: #1d4ed8;
+}
+
+.hidden {
+  display: none;
+}
+
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 20px;
+}
+
+#calendar div {
+  background-color: #a7f3d0;
+  padding: 14px 0;
+  text-align: center;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#calendar div.absent {
+  background-color: #fecaca;
+}
+
+#calendar div:hover {
+  opacity: 0.9;
+}
+
+#summary {
+  margin-top: 15px;
+  font-weight: bold;
+  text-align: center;
+}
